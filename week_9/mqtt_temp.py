@@ -3,10 +3,12 @@ import os
 import glob
 import time
 import paho.mqtt.client as mqtt
+import json
 from gpiozero import LED
 
 DEVICE_ID = "5c690fa7-742f-4df3-b109-7425653aeb50"  
 client_name = DEVICE_ID + '_temperature_client'
+client_telemetry_topic = DEVICE_ID + '/telemetry'
 
 # LED setup (assuming green LED on GPIO17)
 led = LED(17)
@@ -54,7 +56,6 @@ def read_temperature():
         temp_str = lines[1][temp_pos+2:]
         temp_c = float(temp_str) / 1000.0
         return round(temp_c, 2)
-
 try:
     sensor_setup()
     print("Temperature monitoring started. Press Ctrl+C to exit")
@@ -69,6 +70,9 @@ try:
                 led.on()
             else:
                 led.off()
+            
+            telemetry = {'temperature': temp_c}
+            mqtt_client.publish(client_telemetry_topic, json.dumps(telemetry))
             
             time.sleep(3)
             
